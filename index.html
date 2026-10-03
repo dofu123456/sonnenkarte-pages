@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html lang="de">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <title>Sonnenaufgang Schweiz</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+    <script
+      src="https://unpkg.com/leaflet/dist/leaflet.js">
+    </script>
+
+    <link rel="stylesheet" href="style.css">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> -->
+
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div id="profile-panel">
+
+    <div id="profile-header">
+
+        <span>⛰️ Horizontprofil</span>
+
+        <button id="toggle-profile">▲</button>
+
+    </div>
+
+    <div id="profile-content">
+
+        <svg id="profile-svg"></svg>
+
+        <div id="profile-loading">
+            ⏳ Horizontprofil wird geladen...
+        </div>
+
+    </div>
+
+    </div>
+
+</div>
+
+
+<div id="compass">
+
+    <div id="compass-title">
+        ☀️ Sonnenrichtung
+    </div>
+
+    <div id="compass-circle">
+
+        <div class="cardinal north">
+            N<br><span>0°</span>
+        </div>
+
+        <div class="cardinal east">
+            O<br><span>90°</span>
+        </div>
+
+        <div class="cardinal south">
+            S<br><span>180°</span>
+        </div>
+
+        <div class="cardinal west">
+            W<br><span>270°</span>
+        </div>
+
+        <div id="sun-needle">
+
+            <div id="sun-head"></div>
+
+            <div id="sun-line"></div>
+
+            <div id="sun-center"></div>
+
+        </div>
+
+    </div>
+
+    <div id="compass-info">
+
+        <div id="azimuth-value">
+            --
+        </div>
+
+        <div id="azimuth-direction">
+            --
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="legend">
+
+    <div class="sun-mode">
+        <button id="sunrise-mode" class="sun-mode-button active">
+            🌅 Sonnenaufgang
+        </button>
+        <button id="sunset-mode" class="sun-mode-button">
+            🌇 Sonnenuntergang
+        </button>
+    </div>
+
+    <div class="legend-section">
+
+        <h4>📅 Datum</h4>
+
+        <div id="date-navigation">
+            <button id="prev-day">◀</button>
+
+            <span id="current-date"></span>
+
+            <button id="calendar-button">📅</button>
+
+            <button id="next-day">▶</button>
+        </div>
+
+        <div id="calendar-popup">
+            <div id="calendar-header">
+                <button id="calendar-prev-month">◀</button>
+                <span id="calendar-month"></span>
+                <button id="calendar-next-month">▶</button>
+            </div>
+
+            <div id="calendar-grid"></div>
+        </div>
+
+    </div>
+
+    <div class="legend-section">
+
+        <h4>Verzögerung</h4>
+
+        <div><span class="dot green"></span> &lt; 1 min</div>
+        <div><span class="dot yellow"></span> 1–3 min</div>
+        <div><span class="dot orange"></span> 3–5 min</div>
+        <div><span class="dot red"></span> 5–10 min</div>
+        <div><span class="dot purple"></span> &gt; 10 min</div>
+    </div>
+
+    <div class="legend-section">
+        <h4>Sichtweite</h4>
+
+        <div><span class="size s1"></span> &lt; 20 km</div>
+        <div><span class="size s2"></span> 20–40 km</div>
+        <div><span class="size s3"></span> 40–60 km</div>
+        <div><span class="size s4"></span> &gt; 60 km</div>
+    </div>
+
+    <hr>
+
+    <div class="legend-section">
+
+        <h4>Filter</h4>
+
+        <label>
+            ⏱️ Verzögerung
+        </label>
+
+        <input
+            type="range"
+            id="delay-slider"
+            min="-15"
+            max="15"
+            step="0.5"
+            value="3">
+
+        <div id="delay-value"></div>
+
+        <br>
+
+        <label>
+            👁️ Minimale Sichtweite
+        </label>
+
+        <input
+            type="range"
+            id="distance-slider"
+            min="0"
+            max="100"
+            step="1"
+            value="40">
+
+        <div id="distance-value"></div>
+
+    </div>
+
+    <hr>
+
+    <!-- Statistik -->
+    <div id="result-count">
+
+        📍 Angezeigte Standorte
+
+        <div id="count">0</div>
+
+    </div>
+
+</div>
+
+<script src="map_v2.js"></script>
+<!--  <script src="{{ url_for('static', filename='map_v2.js') }}"></script> -->
+
+
+</body>
+
+</html>
