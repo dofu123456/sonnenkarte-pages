@@ -170,7 +170,7 @@ function createPopup(feature) {
     
         <div class="popup-item">
             <span>👁️ Distanz massgebendes Hindernis</span>
-            <strong>${p.Sichtweite.toFixed(1)} km</strong>
+            <strong id="popup-sichtweite-${e}-${n}">${p.Sichtweite.toFixed(1)} km</strong>
         </div>
     
         <div class="popup-divider"></div>
@@ -347,41 +347,55 @@ function createNiceAxis(min, max, targetTicks = 6){
 
 }
 
+function getMeridianConvergence(easting, northing) {
+
+    const Y = easting - 2600000;
+    const X = northing - 1200000;
+
+    const convergenceGon =
+        10.668e-6 * Y +
+        1.788e-12 * Y * X -
+        0.14e-18 * Math.pow(Y, 3);
+
+    return convergenceGon * 0.9;
+}
+
 function createProfileLine(easting, northing, azimuth){
 
     const distance = 100000;
 
-    const azimuthRad =
-        azimuth * Math.PI / 180;
+    const convergence = getMeridianConvergence(easting, northing);
 
-    const endEasting =
-        easting +
-        distance * Math.sin(azimuthRad);
+    const gridAzimuth = azimuth - convergence;
 
-    const endNorthing =
-        northing +
-        distance * Math.cos(azimuthRad);
+    const azimuthRad = gridAzimuth * Math.PI / 180;
+
+    const endEasting = easting + distance * Math.sin(azimuthRad);
+
+    const endNorthing = northing + distance * Math.cos(azimuthRad);
+
+    console.log(
+        "Azimut geografisch:",
+        azimuth,
+        "Konvergenz:",
+        convergence,
+        "Azimut LV95:",
+        gridAzimuth
+    );
 
     return {
-
         type: "LineString",
-
         coordinates: [
-
             [
                 easting,
                 northing
             ],
-
             [
                 endEasting,
                 endNorthing
             ]
-
         ]
-
     };
-
 }
 
 //--------------------------------------------------------
@@ -595,11 +609,15 @@ function findHorizonPointWithEarthCurvature(profile, observerElevation){
 
     if(maxAngle < 0){
 
-        horizonIndex =
-            profile.distance.length - 1;
+        return {
 
-        maxAngle = 0;
-
+            index: null,
+            distance: null,
+            elevation: null,
+            correctedElevation: null,
+            angle: 0,
+            hasHorizon: false
+        };
     }
 
     //----------------------------------------------------
@@ -622,8 +640,8 @@ function findHorizonPointWithEarthCurvature(profile, observerElevation){
             profile.earthDrop[horizonIndex],
 
         angle:
-            maxAngle
-
+            maxAngle,
+        hasHorizon: true
     };
 
 }
@@ -828,6 +846,24 @@ async function loadElevationProfile(feature){
             horizonEarth
         );
 
+        // Falls kein Horizont vorhanden, Popup Text aktualisieren
+        const popupSichtweite =
+            document.getElementById(`popup-sichtweite-${easting}-${northing}`);
+
+        console.log("Sichtweite alt:", popupSichtweite.textContent)
+        if(popupSichtweite){
+            if(horizonEarth.hasHorizon){
+                popupSichtweite.textContent =
+                    `${p.Sichtweite.toFixed(1)} km`;
+            }
+            else{
+                popupSichtweite.textContent =
+                    "> 100 km";
+                console.log("Sichtweite neu:", popupSichtweite.textContent)
+            }
+        }
+
+
         //------------------------------------------------
         // Ladeanzeige ausblenden
         //------------------------------------------------
@@ -988,10 +1024,18 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
     // Horizontmarker mit Erdkrümmung
     //--------------------------------------------------------
 
-    const markerEarthDistance = horizonEarth.distance;
-    const markerEarthElevation = horizonEarth.elevation;
-    const markerEarthX = x(markerEarthDistance);
-    const markerEarthY = y(markerEarthElevation);
+    let markerEarthX = null;
+    let markerEarthY = null;
+
+    if(horizonEarth.hasHorizon){
+
+        markerEarthX =
+            x(horizonEarth.distance);
+
+        markerEarthY =
+            y(horizonEarth.elevation);
+
+    }
 
     //--------------------------------------------------------
     // Sichtlinien
@@ -1176,36 +1220,40 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
         
         <!-- Sonnenmarker -->
         
-        <line
-            x1="${markerEarthX}"
-            y1="${marginTop + 8}"
-            x2="${markerEarthX}"
-            y2="${markerEarthY}"
-            stroke="#c62828"
-            stroke-width="2"
-            stroke-dasharray="5 4"
-        />
+        ${horizonEarth.hasHorizon ? `
         
-        <circle
-            cx="${markerEarthX}"
-            cy="${markerEarthY}"
-            r="5"
-            fill="#88419d"
-            stroke="white"
-            stroke-width="2"
-        />
+            <line
+                x1="${markerEarthX}"
+                y1="${marginTop + 8}"
+                x2="${markerEarthX}"
+                y2="${markerEarthY}"
+                stroke="#c62828"
+                stroke-width="2"
+                stroke-dasharray="5 4"
+            />
         
-        <text
-            x="${markerEarthX}"
-            y="${marginTop}"
-            text-anchor="middle"
-            font-size="11"
-            font-weight="600"
-            fill="#c62828">
+            <circle
+                cx="${markerEarthX}"
+                cy="${markerEarthY}"
+                r="5"
+                fill="#88419d"
+                stroke="white"
+                stroke-width="2"
+            />
         
-            ☀
+            <text
+                x="${markerEarthX}"
+                y="${marginTop}"
+                text-anchor="middle"
+                font-size="11"
+                font-weight="600"
+                fill="#c62828">
         
-        </text>
+                ☀
+        
+            </text>
+        
+        ` : ""}
         
         <!-- y-Achse -->
 
@@ -1615,7 +1663,7 @@ let sunMode = "sunrise";
 
 async function loadAvailableDates() {
 
-    const response = await fetch("https://pub-2a8a04e8ca3c42968cac635ba6d65a1d.r2.dev/available_dates.json");
+    const response = await fetch("/data/available_dates.json");
 
     if (!response.ok) {
         throw new Error("available_dates.json nicht gefunden");
@@ -1806,7 +1854,7 @@ function loadCurrentDate() {
     const filename =
         `${prefix}_${formatDateForFilename(currentDate)}_20km_900s.geojson`;
 
-    fetch(`https://pub-2a8a04e8ca3c42968cac635ba6d65a1d.r2.dev/${folder}/${filename}`)
+    fetch(`/data/${folder}/${filename}`)
         .then(response => {
 
             if (!response.ok) {
