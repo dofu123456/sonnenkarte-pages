@@ -1854,7 +1854,7 @@ function loadCurrentDate() {
     const filename =
         `${prefix}_${formatDateForFilename(currentDate)}_20km_900s.geojson`;
 
-    fetch(`/data/${folder}/${filename}`)
+    fetch(`https://pub-2a8a04e8ca3c42968cac635ba6d65a1d.r2.dev/${folder}/${filename}`)
         .then(response => {
 
             if (!response.ok) {
