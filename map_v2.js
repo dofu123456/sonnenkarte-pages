@@ -1663,7 +1663,7 @@ let sunMode = "sunrise";
 
 async function loadAvailableDates() {
 
-    const response = await fetch("/data/available_dates.json");
+    const response = await fetch("https://pub-2a8a04e8ca3c42968cac635ba6d65a1d.r2.dev/available_dates.json");
 
     if (!response.ok) {
         throw new Error("available_dates.json nicht gefunden");
