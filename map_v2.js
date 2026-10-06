@@ -482,19 +482,10 @@ function findHorizonPoint(profile, observerElevation){
     //----------------------------------------------------
 
     return {
-
-        index:
-            horizonIndex,
-
-        distance:
-            profile.distance[horizonIndex],
-
-        elevation:
-            profile.elevation[horizonIndex],
-
-        angle:
-            maxAngle
-
+        index: horizonIndex,
+        distance: profile.distance[horizonIndex],
+        elevation: profile.elevation[horizonIndex],
+        angle: maxAngle
     };
 
 }
@@ -510,22 +501,14 @@ function addEarthCurvature(profile){
     const earthDrop =
         profile.distance.map(distance => {
 
-            const distanceMeters =
-                distance * 1000;
+            const distanceMeters = distance * 1000;
 
-            return (
-                distanceMeters *
-                distanceMeters
-            ) / (2 * R);
-
+            return (distanceMeters * distanceMeters) / (2 * R);
         });
 
     return {
-
         ...profile,
-
         earthDrop
-
     };
 
 }
@@ -545,49 +528,36 @@ function findHorizonPointWithEarthCurvature(profile, observerElevation){
 
     profile.distance.forEach((distance, index) => {
 
-        const elevation =
-            profile.elevation[index];
-
-        const earthDrop =
-            profile.earthDrop[index];
+        const elevation = profile.elevation[index];
+        const earthDrop = profile.earthDrop[index];
 
         //------------------------------------------------
         // Standort selbst überspringen
         //------------------------------------------------
 
         if(distance === 0){
-
             return;
-
         }
 
         //------------------------------------------------
         // Erdkrümmung berücksichtigen
         //------------------------------------------------
 
-        const correctedElevation =
-            elevation - earthDrop;
+        const correctedElevation = elevation - earthDrop;
 
         //------------------------------------------------
         // Höhendifferenz zum Beobachter
         //------------------------------------------------
 
-        const heightDifference =
-            correctedElevation -
-            observerElevation;
+        const heightDifference = correctedElevation - observerElevation;
 
         //------------------------------------------------
         // Höhenwinkel
         //------------------------------------------------
 
-        const distanceMeters =
-            distance * 1000;
+        const distanceMeters = distance * 1000;
 
-        const angle =
-            Math.atan2(
-                heightDifference,
-                distanceMeters
-            ) * 180 / Math.PI;
+        const angle = Math.atan2(heightDifference, distanceMeters) * 180 / Math.PI;
 
         //------------------------------------------------
         // Größten Winkel speichern
@@ -596,7 +566,6 @@ function findHorizonPointWithEarthCurvature(profile, observerElevation){
         if(angle > maxAngle){
 
             maxAngle = angle;
-
             horizonIndex = index;
 
         }
@@ -604,43 +573,15 @@ function findHorizonPointWithEarthCurvature(profile, observerElevation){
     });
 
     //----------------------------------------------------
-    // Kein Hindernis
-    //----------------------------------------------------
-
-    if(maxAngle < 0){
-
-        return {
-
-            index: null,
-            distance: null,
-            elevation: null,
-            correctedElevation: null,
-            angle: 0,
-            hasHorizon: false
-        };
-    }
-
-    //----------------------------------------------------
     // Ergebnis
     //----------------------------------------------------
 
     return {
-
-        index:
-            horizonIndex,
-
-        distance:
-            profile.distance[horizonIndex],
-
-        elevation:
-            profile.elevation[horizonIndex],
-
-        correctedElevation:
-            profile.elevation[horizonIndex] -
-            profile.earthDrop[horizonIndex],
-
-        angle:
-            maxAngle,
+        index: horizonIndex,
+        distance: profile.distance[horizonIndex],
+        elevation: profile.elevation[horizonIndex],
+        correctedElevation: profile.elevation[horizonIndex] - profile.earthDrop[horizonIndex],
+        angle: maxAngle,
         hasHorizon: true
     };
 
@@ -653,15 +594,9 @@ function findHorizonPointWithEarthCurvature(profile, observerElevation){
 async function loadElevationProfile(feature){
 
     const p = feature.properties;
-
-    const easting =
-        Number(p.e);
-
-    const northing =
-        Number(p.n);
-
-    const azimuth =
-        Number(p.Azimut);
+    const easting = Number(p.e);
+    const northing = Number(p.n);
+    const azimuth = Number(p.Azimut);
 
     //----------------------------------------------------
     // Eingaben prüfen
@@ -675,11 +610,7 @@ async function loadElevationProfile(feature){
 
         console.error(
             "Ungültige Profil-Daten:",
-            {
-                easting,
-                northing,
-                azimuth
-            }
+            {easting, northing, azimuth}
         );
 
         document.getElementById(
@@ -696,11 +627,7 @@ async function loadElevationProfile(feature){
     //----------------------------------------------------
 
     const geometry =
-        createProfileLine(
-            easting,
-            northing,
-            azimuth
-        );
+        createProfileLine(easting, northing, azimuth);
 
     //----------------------------------------------------
     // API-Parameter
@@ -735,25 +662,17 @@ async function loadElevationProfile(feature){
 
     try{
 
-        const response =
-            await fetch(url);
+        const response = await fetch(url);
 
-        console.log(
-            "HTTP Status:",
-            response.status,
-            response.statusText
-        );
+        console.log("HTTP Status:", response.status, response.statusText);
 
         if(!response.ok){
 
-            throw new Error(
-                `HTTP ${response.status} ${response.statusText}`
-            );
+            throw new Error(`HTTP ${response.status} ${response.statusText}`);
 
         }
 
-        const data =
-            await response.json();
+        const data = await response.json();
 
         //------------------------------------------------
         // Antwort prüfen
@@ -764,9 +683,7 @@ async function loadElevationProfile(feature){
             data.length === 0
         ){
 
-            throw new Error(
-                "swisstopo API hat kein Profil geliefert."
-            );
+            throw new Error("swisstopo API hat kein Profil geliefert.");
 
         }
 
@@ -780,18 +697,11 @@ async function loadElevationProfile(feature){
             const observerEyeElevation = observerElevation + observerHeight;
 
             if(!Number.isFinite(observerElevation)){
-
-                throw new Error(
-                    "Standorthöhe konnte aus der API-Antwort nicht gelesen werden."
-                );
+                throw new Error("Standorthöhe konnte aus der API-Antwort nicht gelesen werden.");
 
             }
 
-            console.log(
-                "Standorthöhe:",
-                observerElevation,
-                "m"
-            );
+            console.log("Standorthöhe:", observerElevation, "m");
 
         //------------------------------------------------
         // API-Daten in unser Profilformat umwandeln
@@ -799,32 +709,18 @@ async function loadElevationProfile(feature){
 
         const profile = {
 
-            distance:
-                data.map(point =>
-                    Number(point.dist) / 1000
-                ),
-
-            elevation:
-                data.map(point =>
-                    Number(point.alts.DTM2)
-                ),
-
-            azimuth:
-                azimuth
-
+            distance: data.map(point => Number(point.dist) / 1000),
+            elevation: data.map(point => Number(point.alts.DTM2)),
+            azimuth: azimuth
         };
 
-        console.log(
-            "swisstopo Profil erhalten:",
-            profile
-        );
+        console.log("swisstopo Profil erhalten:", profile);
 
         //----------------------------------------------------
         // Theoretischer Horizont
         //----------------------------------------------------
 
-        const horizon =
-            findHorizonPoint(profile, observerEyeElevation);
+        const horizon = findHorizonPoint(profile, observerEyeElevation);
 
         console.log("Theoretischer Horizont:", horizon);
 
@@ -838,76 +734,45 @@ async function loadElevationProfile(feature){
         // Horizont mit Erdkrümmung
         //----------------------------------------------------
 
-        const horizonEarth =
-            findHorizonPointWithEarthCurvature(profileEarth, observerEyeElevation);
+        const horizonEarth = findHorizonPointWithEarthCurvature(profileEarth, observerEyeElevation);
 
-        console.log(
-            "Horizont mit Erdkrümmung:",
-            horizonEarth
-        );
+        console.log("Horizont mit Erdkrümmung:", horizonEarth);
 
-        // Falls kein Horizont vorhanden, Popup Text aktualisieren
-        const popupSichtweite =
-            document.getElementById(`popup-sichtweite-${easting}-${northing}`);
-
-        console.log("Sichtweite alt:", popupSichtweite.textContent)
-        if(popupSichtweite){
-            if(horizonEarth.hasHorizon){
-                popupSichtweite.textContent =
-                    `${p.Sichtweite.toFixed(1)} km`;
-            }
-            else{
-                popupSichtweite.textContent =
-                    "> 100 km";
-                console.log("Sichtweite neu:", popupSichtweite.textContent)
-            }
-        }
-
+        const popupSichtweite = document.getElementById(`popup-sichtweite-${easting}-${northing}`);
+        popupSichtweite.textContent = `${p.Sichtweite.toFixed(1)} km`;
 
         //------------------------------------------------
         // Ladeanzeige ausblenden
         //------------------------------------------------
 
-        document.getElementById(
-            "profile-loading"
-        ).style.display = "none";
+        document.getElementById("profile-loading").style.display = "none";
 
         //------------------------------------------------
         // Profil zeichnen
         //------------------------------------------------
 
-        drawProfile(profileEarth, horizon, horizonEarth, observerEyeElevation);
+        drawProfile(profileEarth, horizon, horizonEarth, observerEyeElevation, p.Sonnenhoehe);
 
     }
 
     catch(error){
 
-        console.error(
-            "Fehler beim Laden des Höhenprofils:",
-            error
-        );
+        console.error("Fehler beim Laden des Höhenprofils:", error);
 
-        console.error(
-            "Profil-URL:",
-            url
-        );
+        console.error("Profil-URL:", url);
 
         const loading =
-            document.getElementById(
-                "profile-loading"
-            );
+            document.getElementById("profile-loading");
 
-        loading.textContent =
-            "⚠️ Horizontprofil konnte nicht geladen werden.";
+        loading.textContent = "⚠️ Horizontprofil konnte nicht geladen werden.";
 
-        loading.style.display =
-            "block";
+        loading.style.display = "block";
 
     }
 
 }
 
-function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
+function drawProfile(profile, horizon, horizonEarth, observerEyeElevation, sonnenhoehe){
 
     const svg = document.getElementById("profile-svg");
     const width = svg.clientWidth;
@@ -937,37 +802,19 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
     // Achsen
     //--------------------------------------------------------
 
-    const elevationAxis =
-        createNiceAxis(
-            rawMinElevation,
-            rawMaxElevation,
-            5
-        );
+    const elevationAxis = createNiceAxis(rawMinElevation, rawMaxElevation, 5);
 
-    const distanceAxis =
-        createNiceAxis(
-            0,
-            maxDistance,
-            6
-        );
+    const distanceAxis = createNiceAxis(0, maxDistance, 6);
 
     svg.onmousemove = function(event) {
 
-        const rect =
-            svg.getBoundingClientRect();
+        const rect = svg.getBoundingClientRect();
 
-        const mouseX =
-            event.clientX - rect.left;
+        const mouseX = event.clientX - rect.left;
 
-        const plotWidth =
-            width -
-            marginLeft -
-            marginRight;
+        const plotWidth = width - marginLeft - marginRight;
 
-        const distance =
-            (mouseX - marginLeft) /
-            plotWidth *
-            distanceAxis.max;
+        const distance = (mouseX - marginLeft) / plotWidth * distanceAxis.max;
 
         if (
             distance >= 0 &&
@@ -983,24 +830,14 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
 
     function x(distance){
 
-        return marginLeft +
-
-            distance / distanceAxis.max *
-
-            (width - marginLeft - marginRight);
+        return marginLeft + distance / distanceAxis.max * (width - marginLeft - marginRight);
 
     }
 
     function y(elevation){
 
-        return height - marginBottom -
-
-            (elevation - elevationAxis.min) /
-
-            (elevationAxis.max - elevationAxis.min) *
-
+        return height - marginBottom - (elevation - elevationAxis.min) / (elevationAxis.max - elevationAxis.min) *
             (height - marginTop - marginBottom);
-
     }
 
     //--------------------------------------------------------
@@ -1014,9 +851,7 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
         const px = x(distance);
         const py = y(profile.elevation[index]);
 
-        line +=
-            (index === 0 ? "M" : " L") +
-            `${px} ${py}`;
+        line += (index === 0 ? "M" : " L") + `${px} ${py}`;
 
     });
 
@@ -1029,11 +864,9 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
 
     if(horizonEarth.hasHorizon){
 
-        markerEarthX =
-            x(horizonEarth.distance);
+        markerEarthX = x(horizonEarth.distance);
 
-        markerEarthY =
-            y(horizonEarth.elevation);
+        markerEarthY = y(horizonEarth.elevation);
 
     }
 
@@ -1041,14 +874,10 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
     // Sichtlinien
     //--------------------------------------------------------
 
-    const earthLine = profile.distance.map((distance, index) => {
+    const earthLine = profile.distance.map((distance,index) => {
         const distanceMeters = distance * 1000;
         const earthDrop = profile.earthDrop[index];
-
-        return observerEyeElevation +
-            Math.tan(horizonEarth.angle * Math.PI / 180) *
-            distanceMeters +
-            earthDrop;
+        return observerEyeElevation + Math.tan((sonnenhoehe + 0.266) * Math.PI / 180) * distanceMeters + earthDrop; //0.266 = Sonnenradius
     });
 
     //--------------------------------------------------------
@@ -1116,19 +945,14 @@ function drawProfile(profile, horizon, horizonEarth, observerEyeElevation){
     distanceAxis.labels.forEach((value,index)=>{
 
         const px = x(value);
-
         let anchor = "middle";
 
         if(index===0){
-
             anchor="start";
-
         }
 
         if(index===distanceAxis.labels.length-1){
-
             anchor="end";
-
         }
 
         distanceText +=`
@@ -1663,7 +1487,7 @@ let sunMode = "sunrise";
 
 async function loadAvailableDates() {
 
-    const response = await fetch("/data/available_dates.json");
+    const response = await fetch("https://pub-2a8a04e8ca3c42968cac635ba6d65a1d.r2.dev/available_dates.json");
 
     if (!response.ok) {
         throw new Error("available_dates.json nicht gefunden");
@@ -1854,7 +1678,7 @@ function loadCurrentDate() {
     const filename =
         `${prefix}_${formatDateForFilename(currentDate)}_20km_900s.geojson`;
 
-    fetch(`/data/${folder}/${filename}`)
+    fetch(`https://pub-2a8a04e8ca3c42968cac635ba6d65a1d.r2.dev/${folder}/${filename}`)
         .then(response => {
 
             if (!response.ok) {
